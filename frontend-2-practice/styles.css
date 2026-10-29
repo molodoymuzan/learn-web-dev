@@ -294,6 +294,15 @@ body {
   color: #d59f50;
 }
 
+.empty-time-message {
+  color: #6b6661;
+  padding-top: 10px;
+}
+
+.d-none {
+  display: none !important;
+}
+
 .time-slots-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -410,13 +419,13 @@ body {
   color: #ffffff;
 }
 
-.btn-primary:hover {
+.btn-primary:not(:disabled):hover {
   background-color: #32343f;
   border-color: #32343f;
   color: #ffffff;
 }
 
-.btn-primary:active {
+.btn-primary:not(:disabled):active {
   background-color: #151723;
   border-color: #151723;
   color: #ffffff;

@@ -1,10 +1,10 @@
 const MONTHS_NOMINATIVE = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 const MONTHS_GENITIVE = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
 const DAYS_OF_WEEK = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-
 const TIMES = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
 
-const today = new Date(2025, 5, 2);
+const today = new Date();
+today.setHours(0, 0, 0, 0);
 
 const STATE = {
   currentMonth: today.getMonth(),
@@ -31,13 +31,11 @@ function isDateSelectable(day, month, year, todayDate) {
 
 function buildCalendarGrid(year, month) {
   const firstDay = new Date(year, month, 1);
-  
   let startDay = firstDay.getDay() - 1;
   if (startDay === -1) startDay = 6; 
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const prevMonthDays = new Date(year, month, 0).getDate();
-
   const grid = [];
 
   for (let i = startDay - 1; i >= 0; i--) {
@@ -62,7 +60,6 @@ function renderCalendar() {
   const gridContainer = document.getElementById('calendarGrid');
   const title = document.querySelector('.month-title');
   const grid = buildCalendarGrid(STATE.currentYear, STATE.currentMonth);
-  
   const displayDate = new Date(STATE.currentYear, STATE.currentMonth, 1);
   title.textContent = `${MONTHS_NOMINATIVE[displayDate.getMonth()]} ${displayDate.getFullYear()}`;
   
@@ -84,7 +81,6 @@ function renderCalendar() {
     }
 
     const disabledAttr = (!cell.isCurrentMonth || !isSelectable) ? "disabled" : "";
-
     html += `<button type="button" class="${className}" data-day="${cell.day}" ${disabledAttr}>${cell.day}</button>`;
   });
 
@@ -101,11 +97,22 @@ function renderCalendar() {
 
 function renderTimeSlots() {
   const timeContainer = document.getElementById('timeSlotsGrid');
+  const emptyMessage = document.getElementById('emptyTimeMessage');
+  
+  if (STATE.selectedDay === null) {
+    timeContainer.classList.add('d-none');
+    emptyMessage.classList.remove('d-none');
+    timeContainer.innerHTML = '';
+    return;
+  }
+
+  timeContainer.classList.remove('d-none');
+  emptyMessage.classList.add('d-none');
+
   let html = "";
 
   TIMES.forEach(function(time, index) {
     const isSelected = STATE.selectedTime === time;
-    
     const isBusy = (STATE.selectedDay + index) % 4 === 1;
 
     if (isBusy) {
@@ -138,6 +145,7 @@ function renderTimeSlots() {
 
 function updateBottomBar() {
   const infoDiv = document.getElementById('selectedInfo');
+  const btnContinue = document.getElementById('btnContinue');
   
   if (STATE.selectedDay && STATE.selectedTime) {
     const dateObj = new Date(STATE.currentYear, STATE.currentMonth, STATE.selectedDay);
@@ -145,8 +153,14 @@ function updateBottomBar() {
     const monthGenitive = MONTHS_GENITIVE[STATE.currentMonth];
     
     infoDiv.textContent = `${dayOfWeek}, ${STATE.selectedDay} ${monthGenitive} ${STATE.currentYear} • ${STATE.selectedTime}`;
+    btnContinue.disabled = false;
+    btnContinue.style.opacity = '1';
+    btnContinue.style.cursor = 'pointer';
   } else {
     infoDiv.textContent = 'Выберите время';
+    btnContinue.disabled = true;
+    btnContinue.style.opacity = '0.5';
+    btnContinue.style.cursor = 'not-allowed';
   }
 }
 
@@ -197,8 +211,18 @@ function setupMonthNavigation() {
   });
 }
 
+function setupContinueButton() {
+  const btnContinue = document.getElementById('btnContinue');
+  btnContinue.addEventListener('click', function() {
+    if (!btnContinue.disabled) {
+      alert(`Запись подтверждена!\nДата: ${STATE.selectedDay} ${MONTHS_GENITIVE[STATE.currentMonth]} ${STATE.currentYear}\nВремя: ${STATE.selectedTime}`);
+    }
+  });
+}
+
 function init() {
   setupMonthNavigation();
+  setupContinueButton();
   renderCalendar();
   renderTimeSlots();
   updateBottomBar();
