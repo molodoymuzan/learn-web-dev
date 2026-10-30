@@ -1,59 +1,178 @@
-// App — корневой компонент приложения.
-//
-// ЗАДАНИЕ
-// --------
-// Перенесите свою страницу выбора даты и времени из нативного JS
-// на React. У вас уже есть:
-//   - готовая вёрстка (HTML);
-//   - готовые стили (CSS);
-//   - рабочий код на нативном JS (валидация дат, рендер календаря,
-//     обработчики кликов, выбор слота).
-//
-// Теперь нужно то же самое сделать в React.
-//
-// ЧТО НУЖНО СДЕЛАТЬ
-// ------------------
-// 1. Разбить страницу на компоненты. Как именно — решайте сами.
-//    Обычно выделяют: шапку, подвал, календарь, сетку слотов,
-//    нижнюю панель.
-//
-// 2. Перенести вёрстку из HTML в JSX. Стили оставить как есть,
-//    просто положить их в тот же проект (например, в src/styles/
-//    или рядом с компонентами).
-//
-// 3. Заменить нативное состояние (переменные + прямые манипуляции
-//    с DOM) на useState. Какие именно данные должны жить в состоянии —
-//    подумайте сами. Скорее всего: текущий месяц, выбранный день,
-//    выбранное время, массив слотов.
-//
-// 4. Рендер календаря и слотов делать через JSX и .map(),
-//    без innerHTML и querySelector.
-//
-// 5. Обработчики кликов — через onClick прямо в JSX,
-//    без addEventListener.
-//
-// 6. Функции для работы с датами, которые вы уже написали
-//    на нативном JS (построение сетки календаря, сравнение дат,
-//    проверка «не раньше сегодня»), можно переиспользовать.
-//    Они чистые — не зависят от React. Создайте файл
-//    src/utils/date.js и перенесите их туда.
-//
-//
-// ПОДСКАЗКА
-// ---------
-// Если что-то не работает или непонятно, как перевести нативный
-// код на React — вернитесь к лекции. Там разбирались все
-// основные приёмы: состояние, пропсы, рендер списков, колбэки.
-//
-// Ниже — пустой каркас. Здесь можно начать писать.
+import { useState, useEffect } from "react";
+import Header from "./components/Header";
+import StepsBar from "./components/StepsBar";
+import CalendarCard from "./components/CalendarCard";
+import TimeCard from "./components/TimeCard";
+import ActionsRow from "./components/ActionsRow";
+import Footer from "./components/Footer";
+import SuccessModal from "./components/SuccessModal";
+import { fetchToday, fetchSlots } from "./api";
 
-function App() {
+export default function App() {
+  const [today, setToday] = useState(null);
+  const [loadingToday, setLoadingToday] = useState(true);
+  const [errorToday, setErrorToday] = useState(null);
+
+  const [currentMonth, setCurrentMonth] = useState(null);
+  const [currentYear, setCurrentYear] = useState(null);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [slots, setSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [errorSlots, setErrorSlots] = useState(null);
+
+  useEffect(() => {
+    async function loadToday() {
+      try {
+        setLoadingToday(true);
+        setErrorToday(null);
+        const data = await fetchToday();
+        setToday(new Date(data.year, data.month, data.day));
+        setCurrentMonth(data.month);
+        setCurrentYear(data.year);
+        setSelectedDay(data.day);
+      } catch (err) {
+        setErrorToday(err.message);
+      } finally {
+        setLoadingToday(false);
+      }
+    }
+    loadToday();
+  }, []);
+
+  useEffect(() => {
+    if (selectedDay === null || currentMonth === null || currentYear === null) return;
+    
+    let isRelevant = true;
+
+    async function loadSlots() {
+      try {
+        setLoadingSlots(true);
+        setErrorSlots(null);
+        const response = await fetchSlots(selectedDay, currentMonth, currentYear);
+        
+        if (
+          isRelevant && 
+          response.date.day === selectedDay && 
+          response.date.month === currentMonth && 
+          response.date.year === currentYear
+        ) {
+          setSlots(response.slots);
+        }
+      } catch (err) {
+        if (isRelevant) setErrorSlots(err.message);
+      } finally {
+        if (isRelevant) setLoadingSlots(false);
+      }
+    }
+
+    loadSlots();
+
+    return () => {
+      isRelevant = false;
+    };
+  }, [selectedDay, currentMonth, currentYear]);
+
+  const handleDayClick = (day) => {
+    setSelectedDay(day);
+    setSelectedTime(null);
+  };
+
+  const handleTimeClick = (time) => {
+    setSelectedTime(time);
+  };
+
+  const handlePrevMonth = () => {
+    let newMonth = currentMonth - 1;
+    let newYear = currentYear;
+    if (newMonth < 0) {
+      newMonth = 11;
+      newYear--;
+    }
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+    setSelectedDay(null);
+    setSelectedTime(null);
+  };
+
+  const handleNextMonth = () => {
+    let newMonth = currentMonth + 1;
+    let newYear = currentYear;
+    if (newMonth > 11) {
+      newMonth = 0;
+      newYear++;
+    }
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+    setSelectedDay(null);
+    setSelectedTime(null);
+  };
+
+  const handleContinue = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedDay(null);
+    setSelectedTime(null);
+  };
+
   return (
-    <div>
-      {/* Начните отсюда. Например, разметьте .page, добавьте шапку,
-            основную область, подвал. */}
+    <div className="page">
+      <Header />
+      <StepsBar />
+
+      <main className="booking-layout">
+        <h1 className="page-title">Выберите доступное время</h1>
+
+        {loadingToday ? (
+          <div className="empty-time-message" style={{ textAlign: 'center', padding: '40px' }}>
+            Загрузка календаря...
+          </div>
+        ) : errorToday ? (
+          <div className="empty-time-message" style={{ textAlign: 'center', padding: '40px', color: '#b14141' }}>
+            Ошибка: {errorToday}
+          </div>
+        ) : (
+          <div className="booking-cards">
+            <CalendarCard
+              currentMonth={currentMonth}
+              currentYear={currentYear}
+              selectedDay={selectedDay}
+              today={today}
+              onPrevMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
+              onDayClick={handleDayClick}
+            />
+            <TimeCard
+              selectedDay={selectedDay}
+              selectedTime={selectedTime}
+              onTimeClick={handleTimeClick}
+              slots={slots}
+              loading={loadingSlots}
+              error={errorSlots}
+            />
+          </div>
+        )}
+
+        <ActionsRow
+          currentMonth={currentMonth}
+          currentYear={currentYear}
+          selectedDay={selectedDay}
+          selectedTime={selectedTime}
+          onContinue={handleContinue}
+        />
+      </main>
+
+      <Footer />
+
+      <SuccessModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }
-
-export default App;
