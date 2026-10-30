@@ -213,10 +213,22 @@ function setupMonthNavigation() {
 
 function setupContinueButton() {
   const btnContinue = document.getElementById('btnContinue');
+  const modal = document.getElementById('successModal');
+  const btnModalClose = document.getElementById('btnModalClose');
+
   btnContinue.addEventListener('click', function() {
     if (!btnContinue.disabled) {
-      alert(`Запись подтверждена!\nДата: ${STATE.selectedDay} ${MONTHS_GENITIVE[STATE.currentMonth]} ${STATE.currentYear}\nВремя: ${STATE.selectedTime}`);
+      modal.showModal();
     }
+  });
+
+  btnModalClose.addEventListener('click', function() {
+    modal.close();
+    STATE.selectedDay = null;
+    STATE.selectedTime = null;
+    renderCalendar();
+    renderTimeSlots();
+    updateBottomBar();
   });
 }
 
