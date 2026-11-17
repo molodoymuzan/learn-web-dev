@@ -3,12 +3,21 @@ import { buildCalendarGrid, isDateSelectable, MONTHS_NOMINATIVE } from '../data/
 export default function CalendarCard({ currentMonth, currentYear, selectedDay, today, onPrevMonth, onNextMonth, onDayClick }) {
   const grid = buildCalendarGrid(currentYear, currentMonth);
 
+  const isPrevDisabled = currentYear < today.getFullYear() || 
+                         (currentYear === today.getFullYear() && currentMonth <= today.getMonth());
+
   return (
     <section className="card calendar-card">
       <div className="calendar-header">
         <span className="month-title">{MONTHS_NOMINATIVE[currentMonth]} {currentYear}</span>
         <div className="calendar-controls">
-          <button type="button" className="btn-arrow btn-prev" onClick={onPrevMonth}>
+          <button 
+            type="button" 
+            className="btn-arrow btn-prev" 
+            onClick={onPrevMonth}
+            disabled={isPrevDisabled}
+            style={{ opacity: isPrevDisabled ? 0.3 : 1, cursor: isPrevDisabled ? 'not-allowed' : 'pointer' }}
+          >
             <svg width="6" height="10" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M5 1L1 5L5 9" stroke="#D59F50" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -28,7 +37,7 @@ export default function CalendarCard({ currentMonth, currentYear, selectedDay, t
       <div className="calendar-days-grid">
         {grid.map((cell, index) => {
           const isSelectable = isDateSelectable(cell.day, cell.month, cell.year, today);
-          const isSelected = selectedDay === cell.day && currentMonth === cell.month;
+          const isSelected = selectedDay === cell.day && currentMonth === cell.month && cell.isCurrentMonth;
           
           let className = "day-cell ";
           if (!cell.isCurrentMonth || !isSelectable) {
@@ -44,11 +53,11 @@ export default function CalendarCard({ currentMonth, currentYear, selectedDay, t
 
           return (
             <button 
-              key={index} 
+              key={`${cell.year}-${cell.month}-${cell.day}-${index}`} 
               type="button" 
               className={className} 
               disabled={isDisabled}
-              onClick={() => onDayClick(cell.day)}
+              onClick={() => !isDisabled && onDayClick(cell.day)}
             >
               {cell.day}
             </button>

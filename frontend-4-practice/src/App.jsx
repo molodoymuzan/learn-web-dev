@@ -29,7 +29,9 @@ export default function App() {
         setLoadingToday(true);
         setErrorToday(null);
         const data = await fetchToday();
-        setToday(new Date(data.year, data.month, data.day));
+        const todayDate = new Date(data.year, data.month, data.day);
+        todayDate.setHours(0, 0, 0, 0);
+        setToday(todayDate);
         setCurrentMonth(data.month);
         setCurrentYear(data.year);
         setSelectedDay(data.day);
@@ -42,8 +44,10 @@ export default function App() {
     loadToday();
   }, []);
 
-  useEffect(() => {
-    if (selectedDay === null || currentMonth === null || currentYear === null) return;
+useEffect(() => {
+    if (selectedDay === null || currentMonth === null || currentYear === null) {
+      return;
+    }
     
     let isRelevant = true;
 
@@ -51,6 +55,8 @@ export default function App() {
       try {
         setLoadingSlots(true);
         setErrorSlots(null);
+        setSlots([]);
+        
         const response = await fetchSlots(selectedDay, currentMonth, currentYear);
         
         if (
@@ -85,6 +91,12 @@ export default function App() {
   };
 
   const handlePrevMonth = () => {
+    if (!today) return;
+    
+    const isPrevDisabled = currentYear < today.getFullYear() || 
+                           (currentYear === today.getFullYear() && currentMonth <= today.getMonth());
+    if (isPrevDisabled) return;
+
     let newMonth = currentMonth - 1;
     let newYear = currentYear;
     if (newMonth < 0) {
@@ -118,6 +130,11 @@ export default function App() {
     setIsModalOpen(false);
     setSelectedDay(null);
     setSelectedTime(null);
+    if (today) {
+      setCurrentMonth(today.getMonth());
+      setCurrentYear(today.getFullYear());
+      setSelectedDay(today.getDate());
+    }
   };
 
   return (
