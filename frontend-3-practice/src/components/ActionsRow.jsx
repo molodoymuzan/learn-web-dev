@@ -3,12 +3,20 @@ import { DAYS_OF_WEEK, MONTHS_GENITIVE } from '../data/date';
 export default function ActionsRow({ currentMonth, currentYear, selectedDay, selectedTime, onContinue }) {
   const isComplete = selectedDay && selectedTime;
   
-  let infoText = 'Выберите время';
-  if (isComplete) {
+  let infoText = 'Выберите дату и время';
+
+  if (selectedDay) {
     const dateObj = new Date(currentYear, currentMonth, selectedDay);
     const dayOfWeek = DAYS_OF_WEEK[dateObj.getDay()];
     const monthGenitive = MONTHS_GENITIVE[currentMonth];
-    infoText = `${dayOfWeek}, ${selectedDay} ${monthGenitive} ${currentYear} • ${selectedTime}`;
+    
+    const dateStr = `${dayOfWeek}, ${selectedDay} ${monthGenitive} ${currentYear}`;
+    
+    if (selectedTime) {
+      infoText = `${dateStr} • ${selectedTime}`;
+    } else {
+      infoText = `${dateStr} • Выберите время`;
+    }
   }
 
   return (

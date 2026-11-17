@@ -6,6 +6,7 @@ import TimeCard from "./components/TimeCard";
 import ActionsRow from "./components/ActionsRow";
 import Footer from "./components/Footer";
 import SuccessModal from "./components/SuccessModal";
+import { getSlotsForDate } from "./data/date";
 
 const today = new Date();
 today.setHours(0, 0, 0, 0);
@@ -16,6 +17,8 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [selectedTime, setSelectedTime] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const slots = getSlotsForDate(selectedDay, currentMonth, currentYear);
 
   const handleDayClick = (day) => {
     setSelectedDay(day);
@@ -83,6 +86,7 @@ export default function App() {
           <TimeCard
             selectedDay={selectedDay}
             selectedTime={selectedTime}
+            slots={slots}
             onTimeClick={handleTimeClick}
           />
         </div>

@@ -1,6 +1,4 @@
-import { TIMES } from '../data/date';
-
-export default function TimeCard({ selectedDay, selectedTime, onTimeClick }) {
+export default function TimeCard({ selectedDay, selectedTime, slots, onTimeClick }) {
   if (selectedDay === null) {
     return (
       <section className="card time-card">
@@ -15,14 +13,13 @@ export default function TimeCard({ selectedDay, selectedTime, onTimeClick }) {
     <section className="card time-card">
       <h2 className="card-title">Доступное время</h2>
       <div className="time-slots-grid">
-        {TIMES.map((time, index) => {
-          const isSelected = selectedTime === time;
-          const isBusy = (selectedDay + index) % 4 === 1;
+        {slots.map((slot) => {
+          const isSelected = selectedTime === slot.time;
 
-          if (isBusy) {
+          if (!slot.available) {
             return (
-              <button key={time} type="button" className="time-slot busy" disabled>
-                <span className="slot-time">{time}</span>
+              <button key={slot.time} type="button" className="time-slot busy" disabled>
+                <span className="slot-time">{slot.time}</span>
                 <span className="slot-status">Занято</span>
               </button>
             );
@@ -30,12 +27,12 @@ export default function TimeCard({ selectedDay, selectedTime, onTimeClick }) {
 
           return (
             <button 
-              key={time} 
+              key={slot.time} 
               type="button" 
               className={`time-slot available ${isSelected ? "selected" : ""}`}
-              onClick={() => onTimeClick(time)}
+              onClick={() => onTimeClick(slot.time)}
             >
-              <span className="slot-time">{time}</span>
+              <span className="slot-time">{slot.time}</span>
             </button>
           );
         })}

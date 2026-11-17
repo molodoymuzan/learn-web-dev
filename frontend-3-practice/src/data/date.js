@@ -45,3 +45,13 @@ export function buildCalendarGrid(year, month) {
 
   return grid;
 }
+
+export function getSlotsForDate(day, month, year) {
+  if (!day) return [];
+  const seed = day + month + year;
+  
+  return TIMES.map((time, index) => {
+    const isBusy = (seed + index) % 4 === 1;
+    return { time, available: !isBusy };
+  });
+}
